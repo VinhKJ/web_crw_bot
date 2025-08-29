@@ -1,0 +1,1 @@
+"""GUI package for the Web Scraper & Automation Bot."""
