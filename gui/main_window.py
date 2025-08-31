@@ -144,7 +144,6 @@ class MainWindow(QMainWindow):
         self.dynamic_panel.run_requested.connect(self.handle_dynamic_run)
         self.dynamic_panel.stop_requested.connect(self.stop_dynamic_run)
         self.dynamic_panel.log_signal.connect(self.append_log)
-        self.dynamic_panel.result_signal.connect(self.handle_dynamic_result)
 
         # Placeholder for running thread
         self.scenario_thread: ScenarioThread | None = None

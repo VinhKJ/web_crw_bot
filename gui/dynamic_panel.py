@@ -324,7 +324,6 @@ class DynamicPanel(QWidget):
             for col, key in enumerate(cols):
                 value = item.get(key, "")
                 self.table.setItem(row, col, QTableWidgetItem(str(value)))
-        self.result_signal.emit(data)
 
 
 # ====== Helper Dialog Classes ======

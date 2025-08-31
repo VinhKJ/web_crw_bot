@@ -31,7 +31,12 @@ class StaticScraper:
     """Utility class for scraping static pages via Requests and BeautifulSoup."""
 
     @staticmethod
-    def scrape(url: str, selector: str, attr: Optional[str] = None) -> List[ScrapedItem]:
+    def scrape(
+        url: str,
+        selector: str,
+        attr: Optional[str] = None,
+        headers: Optional[Dict[str, str]] = None,
+    ) -> List[ScrapedItem]:
         """
         Fetch the given URL, parse it and extract elements matching the CSS
         selector. For each element found, return its text and a dictionary of
@@ -54,7 +59,15 @@ class StaticScraper:
             A list of ScrapedItem instances containing the extracted
             content.
         """
-        response = requests.get(url, timeout=10)
+        default_headers = {
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/122.0 Safari/537.36"
+            )
+        }
+        all_headers = {**default_headers, **(headers or {})}
+        response = requests.get(url, headers=all_headers, timeout=10)
         response.raise_for_status()
         soup = BeautifulSoup(response.text, "html.parser")
         items: List[ScrapedItem] = []
