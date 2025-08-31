@@ -147,6 +147,9 @@ class MainWindow(QMainWindow):
 
         # Placeholder for running thread
         self.scenario_thread: ScenarioThread | None = None
+        # Keep reference to static scraping thread/worker to avoid premature GC
+        self.static_thread: QThread | None = None
+        self.static_worker: QObject | None = None
 
     def switch_mode(self, checked: bool) -> None:
         """Switch the visible panel based on the selected radio button."""
@@ -178,7 +181,9 @@ class MainWindow(QMainWindow):
             def run(self_inner: Worker) -> None:
                 try:
                     items = StaticScraper.scrape(url, selector)
-                    self_inner.result.emit([{'text': item.text, **item.attrs} for item in items])
+                    self_inner.result.emit([
+                        {"text": item.text, **item.attrs} for item in items
+                    ])
                 except Exception as exc:
                     self_inner.log.emit(f"Lỗi khi cào trang tĩnh: {exc}")
                 finally:
@@ -186,6 +191,9 @@ class MainWindow(QMainWindow):
 
         worker = Worker()
         worker.moveToThread(thread)
+        # Keep references so they survive until thread finishes
+        self.static_thread = thread
+        self.static_worker = worker
         # Connect signals
         worker.finished.connect(thread.quit)
         worker.finished.connect(worker.deleteLater)
@@ -193,11 +201,17 @@ class MainWindow(QMainWindow):
         worker.result.connect(self.static_panel.display_results)
         worker.log.connect(self.append_log)
         thread.started.connect(worker.run)
+        thread.finished.connect(self._clear_static_thread)
         thread.start()
 
     def handle_static_result(self, data: List[Dict[str, str]]) -> None:
         """No-op: results are displayed by static panel itself."""
         pass
+
+    def _clear_static_thread(self) -> None:
+        """Clear references to static scraping thread and worker."""
+        self.static_thread = None
+        self.static_worker = None
 
     # ===== Dynamic Mode Handling =====
     def handle_dynamic_run(self, actions: List[Dict[str, Any]]) -> None:
